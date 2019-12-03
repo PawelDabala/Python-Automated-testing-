@@ -2,32 +2,34 @@ import pytest
 from twitter import Twitter
 
 
-def test_twitter_initialization():
+@pytest.fixture
+def twitter(request):
     twitter = Twitter()
+    yield twitter
+    twitter.delete()
+
+
+def test_twitter_initialization(twitter):
     assert twitter
 
 
-def test_tweet_single_message():
-    twitter = Twitter()
+def test_tweet_single_message(twitter):
     twitter.tweet('Test message')
     assert twitter.tweets == ['Test message']
 
 
-def test_tweet_long_message():
-    twitter = Twitter()
+def test_tweet_long_message(twitter):
     with pytest.raises(Exception):
         twitter.tweet('test' * 41)
     assert twitter.tweets == []
 
-@pytest.mark.parametrize("message, hashtag",(
-                         ("Test #first message", "first"),
-                         ("#first Test message", "first"),
-                         ("#FIRST Test message", "FIRST")
-                         ))
-def test_tweet_with_hashtag(message, hashtag):
-    twitter = Twitter()
-    assert hashtag in twitter.find_hashtags(message)
 
-
-
-
+@pytest.mark.parametrize("message, expected", (
+        ("Test #first message", ["first"]),
+        ("#first Test message", ["first"]),
+        ("#FIRST Test message", ["first"]),
+        ("Test message #first", ['first']),
+        ("Test message #first #second", ["first", "second"])
+))
+def test_tweet_with_hashtag(twitter, message, expected):
+    assert twitter.find_hashtags(message) == expected  # dorbra praktyka nazywanie
