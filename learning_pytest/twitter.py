@@ -40,7 +40,10 @@ class Twitter:
     def tweet(self, message):
         if len(message) > 160:
             raise Exception('Message too long')
-        self.tweets.append({'message': message, 'avatar': self.get_user_avatar()})
+        self.tweets.append({'message': message,
+                            'avatar': self.get_user_avatar(),
+                            'hashtags': self.find_hashtags(message)
+                            })
         #jeżeli tweetujemy i nasz backend istnieje prubujemy zapisać do niego kopie naszych
         #tweets
         if self.backend:
@@ -48,4 +51,14 @@ class Twitter:
 
     def find_hashtags(self, message):
         return [m.lower() for m in re.findall("#(\w+)", message)]
+
+
+    def get_all_hastags(self):
+        hashtags = []
+        for message in self.tweets:
+            hashtags.extend(message['hashtags'])
+        if hashtags:
+            return set(hashtags)
+
+        return "No hashtags found"
 
